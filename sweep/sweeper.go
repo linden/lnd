@@ -10,6 +10,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/lightningnetwork/lnd/chainio"
 	"github.com/lightningnetwork/lnd/chainntnfs"
 	"github.com/lightningnetwork/lnd/fn"
 	"github.com/lightningnetwork/lnd/input"
@@ -301,6 +302,8 @@ type updateResp struct {
 
 // UtxoSweeper is responsible for sweeping outputs back into the wallet
 type UtxoSweeper struct {
+	chainio.BeatConsumer
+
 	started uint32 // To be used atomically.
 	stopped uint32 // To be used atomically.
 
@@ -337,6 +340,9 @@ type UtxoSweeper struct {
 	// TxPublisher.
 	bumpResultChan chan *BumpResult
 }
+
+// Compile-time check for the chainio.Consumer interface.
+var _ chainio.Consumer = (*UtxoSweeper)(nil)
 
 // UtxoSweeperConfig contains dependencies of UtxoSweeper.
 type UtxoSweeperConfig struct {
@@ -411,7 +417,7 @@ type sweepInputMessage struct {
 
 // New returns a new Sweeper instance.
 func New(cfg *UtxoSweeperConfig) *UtxoSweeper {
-	return &UtxoSweeper{
+	s := &UtxoSweeper{
 		cfg:               cfg,
 		newInputs:         make(chan *sweepInputMessage),
 		spendChan:         make(chan *chainntnfs.SpendDetail),
@@ -421,6 +427,11 @@ func New(cfg *UtxoSweeperConfig) *UtxoSweeper {
 		inputs:            make(InputsMap),
 		bumpResultChan:    make(chan *BumpResult, 100),
 	}
+
+	// Mount the block consumer.
+	s.BeatConsumer = chainio.NewBeatConsumer(s.quit, s.Name())
+
+	return s
 }
 
 // Start starts the process of constructing and publish sweep txes.
@@ -502,6 +513,11 @@ func (s *UtxoSweeper) Stop() error {
 	s.wg.Wait()
 
 	return nil
+}
+
+// NOTE: part of the `chainio.Consumer` interface.
+func (s *UtxoSweeper) Name() string {
+	return "UtxoSweeper"
 }
 
 // SweepInput sweeps inputs back into the wallet. The inputs will be batched and
