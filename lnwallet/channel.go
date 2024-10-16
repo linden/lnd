@@ -2727,6 +2727,7 @@ func NewBreachRetribution(chanState *channeldb.OpenChannel, stateNum uint64,
 				//nolint:lll
 				return a.ResolveContract(ResolutionReq{
 					ChanPoint:      chanState.FundingOutpoint,
+					ChanType:       chanState.ChanType,
 					ShortChanID:    chanState.ShortChanID(),
 					Initiator:      chanState.IsInitiator,
 					CommitBlob:     revokedLog.CustomBlob.ValOpt(),
@@ -2803,6 +2804,7 @@ func NewBreachRetribution(chanState *channeldb.OpenChannel, stateNum uint64,
 				//nolint:lll
 				return a.ResolveContract(ResolutionReq{
 					ChanPoint:      chanState.FundingOutpoint,
+					ChanType:       chanState.ChanType,
 					ShortChanID:    chanState.ShortChanID(),
 					Initiator:      chanState.IsInitiator,
 					CommitBlob:     revokedLog.CustomBlob.ValOpt(),
@@ -7340,6 +7342,7 @@ func NewUnilateralCloseSummary(chanState *channeldb.OpenChannel,
 			func(a AuxContractResolver) fn.Result[tlv.Blob] {
 				return a.ResolveContract(ResolutionReq{
 					ChanPoint:     chanState.FundingOutpoint, //nolint:lll
+					ChanType:      chanState.ChanType,
 					ShortChanID:   chanState.ShortChanID(),
 					Initiator:     chanState.IsInitiator,
 					CommitBlob:    chanState.RemoteCommitment.CustomBlob, //nolint:lll
