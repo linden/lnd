@@ -1,4 +1,4 @@
-//go:build js || (windows && (arm || 386)) || (linux && (ppc64 || mips || mipsle || mips64))
+//go:build wasm || (windows && (arm || 386)) || (linux && (ppc64 || mips || mipsle || mips64))
 
 package sqldb
 
